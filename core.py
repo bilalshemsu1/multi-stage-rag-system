@@ -90,7 +90,7 @@ class ChromaVectorStore:
         # cosine is best with normalized embeddings
         metadata = {
             "hnsw:space": "cosine",
-            "created_by": "process-file.py",
+            "created_by": "ingest.py",
         }
         if embedding_dim_hint is not None:
             metadata["embedding_dim_hint"] = embedding_dim_hint
