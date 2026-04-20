@@ -1,91 +1,80 @@
 # AstuAI: Multi-Stage RAG System
 
-AstuAI is a professional-grade Retrieval-Augmented Generation (RAG) system developed for Adama Science and Technology University (ASTU). It allows users to upload academic documents (PDF, DOCX, PPTX), index them into a high-performance vector database, and chat with them using state-of-the-art LLMs like Google Gemini, Cerebras, and Zydit.
-
-## 🚀 System Overview
-
-The system operates in a multi-stage pipeline:
-1.  **Ingestion Stage**: Documents are parsed, split into semantic chunks with overlap, and converted into mathematical vectors using the **BGE-large** embedding model. These vectors are stored in **ChromaDB**.
-2.  **Retrieval Stage**: When a user asks a question, the system embeds the query and performs a semantic search to find the most relevant document sections.
-3.  **Augmentation Stage**: The retrieved context is formatted into a refined system prompt.
-4.  **Generation Stage**: The LLM (Gemini/Cerebras/Zydit) generates a streaming response based strictly on the provided academic context.
+AstuAI is a production-grade **Retrieval-Augmented Generation (RAG)** system developed for **Adama Science and Technology University (ASTU)**. It bridges the gap between static academic documents and conversational AI by providing a high-performance pipeline for document ingestion, semantic retrieval, and context-aware generation.
 
 ---
 
-## 🛠 Features
+## 🧬 Scientific & Logical Foundation
 
-*   **Multi-Format Support**: Native parsing for PDF, DOCX, and PPTX.
-*   **Intelligent Chunking**: Semantic splitting that preserves context across page boundaries.
-*   **High-Speed Retrieval**: Powered by ChromaDB with HNSW indexing.
-*   **Flexible LLM Backend**: Built-in support for:
-    *   **Google Gemini** (via `google-genai` SDK)
-    *   **Cerebras** (Ultra-fast inference)
-    *   **Zydit** (OpenAI-compatible)
-*   **Rich UI**: A clean, modern web interface with Markdown rendering and source citations.
-*   **Streaming Responses**: Real-time answer generation using Server-Sent Events (SSE).
+### What is RAG?
+Standard LLMs like GPT or Gemini are trained on public data but lack knowledge of your private or university-specific documents. **Retrieval-Augmented Generation (RAG)** solves this by providing the AI with a "search engine" for your files. Instead of relying on its memory, the AI searches your documents for relevant facts and uses them to answer, virtually eliminating "hallucinations."
+
+### Our Core Logic
+AstuAI doesn't just "search" for keywords; it uses **Vector Math**. By converting text into high-dimensional vectors, the system understands that "Student Registration" and "Enrollment Process" are semantically similar, even if they share no common words.
 
 ---
 
-## ⚙️ Installation & Setup
+## 🏗 Architectural Layers
 
-### 1. Prerequisites
-*   Python 3.10+
-*   An API Key for Gemini, Cerebras, or Zydit.
+### Layer 1: Document Parsing Engine (`ingest.py`)
+This layer handles the extraction of raw text from varied formats including **PDF (PyMuPDF)**, **DOCX (python-docx)**, and **PPTX (python-pptx)**. It features:
+*   **Metadata Extraction**: Captures document names, subjects, and page numbers.
+*   **Clean Normalization**: Strips excessive whitespace and prepares text for embedding.
 
-### 2. Clone and Install
+### Layer 2: Semantic Chunking
+Text is split into semantic blocks (default ~2200 characters) with a **350-character overlap**. This ensures that if an important concept is discussed at the end of one chunk, it is also captured at the start of the next, preventing context loss during retrieval.
+
+### Layer 3: Vector Embedding Engine (`core.py`)
+We use the **BGE-large-en-v1.5** model, one of the highest-rated open-source embedding models.
+*   **Instruction-Based Retrieval**: For queries, we automatically prefix the text with *"Represent this sentence for searching relevant passages:"*. This primes the model to output a vector optimized for search rather than general similarity.
+
+### Layer 4: Distributed Retrieval Layer
+Powered by **ChromaDB**, the system uses an **HNSW (Hierarchical Navigable Small World)** index.
+*   **Metric**: Cosine Similarity. This ensures that the *direction* of the text's meaning is prioritized over the length or frequency of words.
+*   **Filtering**: Supports boolean metadata filters (e.g., searching only within a specific document).
+
+### Layer 5: RAG Orchestration & API (`main.py`)
+A **FastAPI** backend that manages the conversation flow:
+1.  Reduces user query to a vector.
+2.  Retrieves the Top-K most relevant chunks.
+3.  Injects those chunks into a "Ground Truth" system prompt.
+4.  Ensures strictly Markdown-formatted responses.
+
+### Layer 6: Multi-Provider Generation
+Unlike single-model systems, AstuAI supports multiple high-performance backends:
+*   **Google Gemini**: Deep reasoning and massive context windows.
+*   **Cerebras**: The world's fastest inference for real-time applications.
+*   **Zydit**: High-availability OpenAI-compatible endpoints.
+
+---
+
+## 🛠 Features & Capabilities
+
+*   **Streaming SSE**: Server-Sent Events allow the UI to display words as they are generated, providing a fluid user experience.
+*   **Hardware Acceleration**: Automatic detection of **NVIDIA (CUDA)**, **Apple (MPS)**, or **Intel (XPU)** hardware to speed up local embeddings.
+*   **Citation Engine**: Every answer includes the specific source documents and page ranges used to generate the response.
+*   **Modern UI**: Dark-mode optimized interface with full Markdown and LaTeX support.
+
+---
+
+## 📖 Setup & Deployment
+
+### 1. Installation
 ```bash
-# Clone the repository
 git clone https://github.com/bilalshemsu1/multi-stage-rag-system.git
 cd multi-stage-rag-system
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
-Create a `.env` file in the root directory (use `.env.example` as a template):
-```env
-GEMINI_API_KEY="your_api_key_here"
-LLM_PROVIDER=gemini
-```
+### 2. Configuration
+Copy `.env.example` to `.env` and add your API keys.
 
----
-
-## 📖 Usage Guide
-
-### Step 1: Prepare Your Documents
-Place all your PDF, DOCX, or PPTX files into the `files/` directory.
-
-### Step 2: Indexing (Ingestion)
-Run the ingestion script to process the files and build the vector database:
-```bash
-python ingest.py
-```
-*The script will display a beautiful dashboard showing the progress and hardware acceleration (CPU/GPU) status.*
-
-### Step 3: Start the API Server
-Launch the FastAPI backend:
-```bash
-uvicorn main:app --reload
-```
-The server will start at `http://localhost:8000`.
-
-### Step 4: Open the UI
-Simply open `index.html` in your browser to start chatting with your documents!
-
----
-
-## 🧬 Technical Architecture
-
-*   **Embeddings**: Uses `BAAI/bge-large-en-v1.5` via `sentence-transformers`. It includes automatic BGE instruction prefixing for better retrieval accuracy.
-*   **Vector Store**: `ChromaDB` (Persistent) using cosine similarity.
-*   **API Framework**: `FastAPI` with asynchronous streaming handlers.
-*   **UI**: Vanilla JS and CSS with `markdown-it` for high-performance rendering.
+### 3. Execution
+1.  **Ingest**: Place documents in `files/` and run `python ingest.py`.
+2.  **Run Server**: `uvicorn main:app --reload`.
+3.  **Chat**: Open `index.html` in your browser.
 
 ---
 
 ## 🤝 Project Credits
-Developed for **Adama Science and Technology University (ASTU)**.
-
----
-*Developed by Bilal Shemsu*
+Developed for **Adama Science and Technology University (ASTU)** by **Bilal Shemsu**.
