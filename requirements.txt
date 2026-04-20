@@ -1,0 +1,17 @@
+Flask>=2.3.0
+gunicorn>=21.2.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sentence-transformers>=2.2.2
+numpy>=1.24.3
+chromadb>=0.5.0
+PyMuPDF>=1.23.0
+tqdm>=4.66.0
+cerebras-cloud-sdk>=0.1.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+flask-cors>=4.0.0  # Optional: for cross-origin requests
+python-docx
+python-pptx
+rich
+tenacity

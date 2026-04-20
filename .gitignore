@@ -1,0 +1,18 @@
+# Environments and secrets
+.env
+__pycache__/
+.venv/
+env/
+venv/
+
+# Vector database storage
+chroma_store/
+
+# Do not ignore files directory contents except the gitkeep
+files/*
+!files/.gitkeep
+
+# Ignore testing/scratch code
+collection/
+ignore/
+backup/
